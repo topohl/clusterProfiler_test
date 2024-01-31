@@ -6,18 +6,48 @@ if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install(c("clusterProfiler", "pathview", "enrichplot"))
+require(DOSE)
 
 # Load necessary libraries
+required_packages <- c("clusterProfiler", "enrichplot", "ggplot2", "ggnewscale", "cowplot", "ggridges", "europepmc", "ggpubr", "ggrepel", "ggsci", "ggthemes", "ggExtra", "ggforce", "ggalluvial", "lattice", "latticeExtra")
+
+# Load each package separately
+for (package in required_packages) {
+    if (!require(package, character.only = TRUE)) {
+        install.packages(package)
+    }
+    if (!require(package, character.only = TRUE)) {
+        install.packages(package)
+    }
+    library(package, character.only = TRUE)
+}
+
+# Install and load packages
+install_load_packages <- function(package) {
+    if (!require(package, character.only = TRUE)) {
+        install.packages(package)
+    }
+    library(package, character.only = TRUE)
+}
 library(clusterProfiler)
 library(enrichplot)
-library(ggplot2)  # Used for adding x-axis labels in plots
-install.packages("ggnewscale")
+library(ggplot2)
 library(ggnewscale)
-library(cowplot)  # Used for combining plots
-install.packages("ggridges")
+library(cowplot)
 library(ggridges)
-install.packages("europepmc")
 library(europepmc)
+library(ggpubr)
+library(ggrepel)
+library(ggsci)
+library(ggthemes)
+library(ggExtra)
+library(ggforce)
+library(ggalluvial)
+library(lattice)
+library(latticeExtra)
+
+# Check if packages are installed, if not install them
+lapply(required_packages, install_load_packages)
 
 # Annotation setup: Select the organism and install the corresponding annotation package
 organism <- "org.Mm.eg.db"  # Set the desired organism code
@@ -28,9 +58,13 @@ library(organism, character.only = TRUE)
 setwd("S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA")
 # Define Results dir S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA/Results
 results_dir <- "S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA/Results"
-# Prepare Input: Read and process data
-df <- read.csv("S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA/Datasets/somavsmicroglia_log2fc.csv", header = TRUE)
 
+# define cell types to compare
+cell_types <- c("neuropil", "microglia")
+
+# Prepare Input: Read and process data
+# Automatically read in cells from cell types and adjust the .csv
+df <- read.csv(paste0("S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA/Datasets/", paste(cell_types, collapse = "_"), ".csv"), header = TRUE)
 
 colnames(df)[1] <- "gene_symbol"
 original_gene_list <- df$log2fc
@@ -56,12 +90,10 @@ require(DOSE)
 dotplot(gse, showCategory = 10, split = ".sign") + facet_grid(. ~ .sign)
 # add title to dotplot
 p1 <- dotplot(gse, showCategory = 10, split = ".sign") + facet_grid(. ~ .sign)
-p1 <- p1 + labs(title = "GSEA of soma vs microglia")
-# change colors of dots
-p1 <- p1 + scale_color_manual(values = c("yellow", "green"))
-# remove dot contour lines
+p1 <- p1 + labs(title = paste("GSEA of", paste(cell_types, collapse = " over ")))
+p1
 # save dotplot to results dir
-ggsave(paste0(results_dir, "/GSEAdotplot_somavsmicroglia.png"), p1, units = "cm", dpi = 300)
+ggsave(paste0(results_dir, "/GSEAdotplot_", paste(cell_types, collapse = "_"), ".png"), p1, units = "cm", dpi = 300)
 
 # Enrichment Plot Map
 similarity_matrix <- pairwise_termsim(gse)
@@ -102,14 +134,13 @@ kk2 <- gseKEGG(geneList = kegg_gene_list,
                pAdjustMethod = "none",
                keyType = "uniprot")
 
-# Visualizations for KEGG GSEA
+# Visualizations for KEGG GSEA KEGG GSEA Enriched Pathways of
 p2 <- dotplot(kk2, showCategory = 10, title = "Enriched Pathways", split = ".sign") + facet_grid(. ~ .sign)
-p2 <- p2 + labs(title = "KEGG GSEA Enriched Pathways of soma vs. microglia")
-# change colors of dots
-p2 <- p2 + scale_color_manual(values = c("yellow", "green"))
+p2 <- p2 + labs(title = paste("KEGG GSEA Enriched Pathways of", paste(cell_types, collapse = " over ")))
+p2
 # remove dot contour lines
 # save dotplot to results dir
-ggsave(paste0(results_dir, "/GSEAKEGGdotplot_somavsmicroglia.png"), p2, units = "cm", dpi = 300)
+ggsave(paste0(results_dir, "/KEGGpathway_", paste(cell_types, collapse = "_"), ".png"), p2, units = "cm", dpi = 300)
 
 emapplot(kk2)
 cnetplot(kk2, categorySize = "pvalue", foldChange = gene_list)
