@@ -60,7 +60,7 @@ setwd("S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics
 results_dir <- "S:/Lab_Member/Tobi/Experiments/Exp3_Nlgn3_development/LaserDissProteomics/GSEA/Results"
 
 # define cell types to compare
-cell_types <- c("neuropil", "microglia")
+cell_types <- c("ca3soma", "ca1soma")
 
 # Prepare Input: Read and process data
 # Automatically read in cells from cell types and adjust the .csv
@@ -152,9 +152,30 @@ install.packages("pathview")
 library(pathview)
 
 # Produce the native KEGG plot (PNG)
-dme <- pathview(gene.data = kegg_gene_list, pathway.id = "dme04130", species = kegg_organism)
+dme <- pathview(gene.data = kegg_gene_list, pathway.id = "mmu00030", species = kegg_organism)
 # Produce a different plot (PDF)
-dme <- pathview(gene.data = kegg_gene_list, pathway.id = "dme04130", species = kegg_organism, kegg.native = FALSE)
+dme <- pathview(gene.data = kegg_gene_list, pathway.id = "mmu00030", species = kegg_organism, kegg.native = FALSE)
 
 # Display the native KEGG plot
-knitr::include_graphics("dme04130.pathview.png")
+knitr::include_graphics("mmu00190.pathview.png")
+
+go_enrich <- enrichGO(gene = gene_list,
+                      universe = names(gene_list),
+                      OrgDb = organism, 
+                      keyType = 'SYMBOL',
+                      readable = T,
+                      ont = "CC",
+                      pvalueCutoff = 0.05, 
+                      qvalueCutoff = 0.10)
+
+
+p2 <- heatplot(, foldChange=geneList, showCategory=5)
+cowplot::plot_grid(p1, p2, ncol=1, labels=LETTERS[1:2])
+
+# plot heatmap from enrichr package
+p1 <- heatplot(similarity_matrix, showCategory=5)
+p2 <- heatplot(similarity_matrix, foldChange = gene_list, showCategory = 5)
+cowplot::plot_grid(p1, p2, ncol=1, labels=LETTERS[1:2])
+
+
+p3 <- cnetplot(gse, foldChange=gene_list, circular = TRUE, colorEdge = TRUE) 
